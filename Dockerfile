@@ -1,11 +1,11 @@
 # Define Mosquitto version, see also .github/workflows/build_and_push_docker_images.yml for
 # the automatically built images
-ARG MOSQUITTO_VERSION=2.0.18
+ARG MOSQUITTO_VERSION=2.0.22
 # Define libwebsocket version
-ARG LWS_VERSION=4.2.2
+ARG LWS_VERSION=4.4.1
 
 # Use debian:stable-slim as a builder for Mosquitto and dependencies.
-FROM debian:stable-slim as mosquitto_builder
+FROM debian:bookworm-slim AS mosquitto_builder
 ARG MOSQUITTO_VERSION
 ARG LWS_VERSION
 
@@ -52,7 +52,7 @@ RUN set -ex; \
     make install;
 
 # Use golang:latest as a builder for the Mosquitto Go Auth plugin.
-FROM --platform=$BUILDPLATFORM golang:latest AS go_auth_builder
+FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS go_auth_builder
 
 ENV CGO_CFLAGS="-I/usr/local/include -fPIC"
 ENV CGO_LDFLAGS="-shared -Wl,-unresolved-symbols=ignore-all"
@@ -71,13 +71,13 @@ RUN set -ex; \
   if [ ! -z "$TARGETPLATFORM" ]; then \
     case "$TARGETPLATFORM" in \
   "linux/arm64") \
-    apt update && apt install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
+    apt-get update && apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
     ;; \
   "linux/arm/v7") \
-    apt update && apt install -y gcc-arm-linux-gnueabihf libc6-dev-armhf-cross \
+    apt-get update && apt-get install -y gcc-arm-linux-gnueabihf libc6-dev-armhf-cross \
     ;; \
   "linux/arm/v6") \
-    apt update && apt install -y gcc-arm-linux-gnueabihf libc6-dev-armel-cross libc6-dev-armhf-cross \
+    apt-get update && apt-get install -y gcc-arm-linux-gnueabihf libc6-dev-armel-cross libc6-dev-armhf-cross \
     ;; \
   esac \
   fi
@@ -92,11 +92,11 @@ RUN set -ex; \
 	  go build pw-gen/pw.go
 
 #Start from a new image.
-FROM debian:stable-slim
+FROM debian:bookworm-slim
 
 RUN set -ex; \
-    apt update; \
-    apt install -y libc-ares2 openssl uuid tini wget libssl-dev libcjson-dev
+    apt-get update; \
+    apt-get install -y libc-ares2 openssl uuid tini wget libssl-dev libcjson-dev ca-certificates
 
 RUN mkdir -p /var/lib/mosquitto /var/log/mosquitto
 RUN set -ex; \
