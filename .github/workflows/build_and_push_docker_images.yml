@@ -46,7 +46,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/${{ env.DOCKERHUB_REPO }}:${{ github.event.release.tag_name }}${{ format('{0}{1}', env.MOSQUITTO_VERSION_SUFFIX, env.MOSQUITTO_VERSION_1) }}
       
@@ -55,7 +55,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/${{ env.DOCKERHUB_REPO }}:latest${{ format('{0}{1}', env.MOSQUITTO_VERSION_SUFFIX, env.MOSQUITTO_VERSION_1) }}
       
@@ -64,7 +64,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: false
   mosq_2:
     name: Build and publish with Mosquitto version 2.x
@@ -100,7 +100,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/${{ env.DOCKERHUB_REPO }}:${{ github.event.release.tag_name }}${{ format('{0}{1}', env.MOSQUITTO_VERSION_SUFFIX, env.MOSQUITTO_VERSION_2) }}
       
@@ -109,7 +109,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ env.DOCKERHUB_REPO }}:latest${{ format('{0}{1}', env.MOSQUITTO_VERSION_SUFFIX, env.MOSQUITTO_VERSION_2) }}
@@ -120,5 +120,5 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: false
