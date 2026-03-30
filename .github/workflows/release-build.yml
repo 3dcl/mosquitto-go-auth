@@ -1,10 +1,12 @@
 name: Build Linux Binaries
 
 on:
+  push:
+    branches: ['**']
   release:
     types: [published]
 env:
-  MOSQUITTO_VERSION: 2.0.15
+  MOSQUITTO_VERSION: 2.0.22
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,15 +19,19 @@ jobs:
           tar -zxf mosquitto.tgz
           mkdir -p output/linux-amd64 output/linux-arm64 output/linux-armv7 output/linux-armv6
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           path: mosquitto-go-auth
+      - name: Docker setup
+        uses: docker/setup-docker-action@v4
       - name: run build
-        uses: addnab/docker-run-action@v3
-        with:
-          image: golang:latest
-          options: -e MOSQUITTO_VERSION=${{ env.MOSQUITTO_VERSION }} -v ${{ github.workspace }}:/usr/src -w /usr/src
-          run: |
+        run: |
+          docker run \
+            --rm \
+            -e MOSQUITTO_VERSION=${{ env.MOSQUITTO_VERSION }} \
+            -v ${{ github.workspace }}:/usr/src \
+            -w /usr/src \
+            golang:1.25-bookworm \
             /usr/src/mosquitto-go-auth/.github/workflows/scripts/build.sh
       - name: zip
         run: |
@@ -35,7 +41,8 @@ jobs:
           zip -r linux-armv7.zip linux-armv7
           zip -r linux-armv6.zip linux-armv6
       - name: Release files
-        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             output/linux-amd64.zip

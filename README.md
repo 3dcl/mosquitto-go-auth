@@ -1,14 +1,21 @@
-# Archived
-
-08/06/2025: I haven't used this plugin in almost 6 years nor have followed Mosquitto's changes in some time now.
-The plugin works perfectly fine at the moment but that might stop being true in time, so I'm archiving the project to make clear there will be no more changes to it.
-Thanks to everyone that had kinds words and appreciated the project.
-
 # Mosquitto Go Auth
+
+[![Test](https://github.com/lhns/mosquitto-go-auth/actions/workflows/test.yml/badge.svg)](https://github.com/lhns/mosquitto-go-auth/actions/workflows/test.yml)
+[![CodeQL](https://github.com/lhns/mosquitto-go-auth/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/lhns/mosquitto-go-auth/actions/workflows/codeql-analysis.yml)
+[![Release Notes](https://img.shields.io/github/release/lhns/mosquitto-go-auth.svg?maxAge=3600)](https://github.com/lhns/mosquitto-go-auth/releases/latest)
+[![MIT License](https://img.shields.io/github/license/lhns/mosquitto-go-auth.svg?maxAge=3600)](https://opensource.org/license/mit)
 
 Mosquitto Go Auth is an authentication and authorization plugin for the Mosquitto MQTT broker.
 The name is terrible, I know, but it's too late to change it. And, you know: naming, cache invalidation, off-by-one errors and whatnot.
 
+### Project Status
+
+2025-06-08 [iegomez](https://github.com/iegomez): I haven't used this plugin in almost 6 years nor have followed Mosquitto's changes in some time now.
+The plugin works perfectly fine at the moment but that might stop being true in time, so I'm archiving the project to make clear there will be no more changes to it.
+Thanks to everyone that had kinds words and appreciated the project.
+
+2025-06-20 [lhns](https://github.com/lhns): I forked the repository from [iegomez/mosquitto-go-auth](https://github.com/iegomez/mosquitto-go-auth).
+Thank you [iegomez](https://github.com/iegomez) for creating this project and maintaining it over the years.
 
 ### Intro
 
@@ -1167,6 +1174,7 @@ The following options are supported:
 | auth_opt_http_timeout       | 5         |     N     | Timeout in seconds                 |
 | auth_opt_http_user_agent    | mosquitto |     N     | User Agent to use in requests      |
 | auth_opt_http_method        | POST      |     N     | Http method used (POST, GET, PUT)  |
+| auth_opt_http_header_<name> |           |     N     | Extra header forwarded to backend  |
 
 #### Response mode
 
@@ -1212,6 +1220,19 @@ For ACL check:
 
 When set to `form`, it will send params like a regular html form post.
 
+#### Custom headers
+
+Add any number of static headers to outbound requests by defining options that follow the pattern `auth_opt_http_header_<Header-Name>`.
+Everything after the prefix becomes the header key, so setting
+
+```
+auth_opt_http_header_X-Api-Key super-secret
+auth_opt_http_header_X-Request-Source mosquitto-go-auth
+```
+
+will inject both headers on every HTTP call. Header names keep their original casing, and empty values are ignored.
+Use this to supply API keys or routing metadata when the target service requires them.
+
 #### Testing HTTP
 
 This backend has no special requirements as the http servers are specially mocked to test different scenarios.
@@ -1237,10 +1258,14 @@ Finally, options for Redis are the following:
 | auth_opt_redis_host               | localhost |     N     | IP address,will skip dns lookup      |
 | auth_opt_redis_port               | 6379      |     N     | TCP port number                      |
 | auth_opt_redis_db                 | 2         |     N     | Redis DB number                      |
+| auth_opt_redis_username           |           |     N     | Redis DB (>= v6.0) ACL username      |
 | auth_opt_redis_password           |           |     N     | Redis DB password                    |
+| auth_opt_redis_tls                | false     |     N     | Enable TLS connection to Redis       |
 | auth_opt_redis_disable_superuser  | true      |     N     | Disable query to check for superuser |
 | auth_opt_redis_mode               |           |     N     | See `Cluster` section below          |
 | auth_opt_redis_cluster_addresses  |           |     N     | See `Cluster` section below          |
+
+When `auth_opt_redis_tls` is set to `true`, the plugin negotiates TLS when contacting Redis. Ensure the Redis certificate is trusted by the host running mosquitto-go-auth.
 
 
 #### Cluster
@@ -1639,9 +1664,9 @@ Only images for x86_64/AMD64 and ARMv7 have been tested. ARMv6 and ARM64 hardwar
 
 #### Prebuilt images
 
-Prebuilt images are provided on Dockerhub under [iegomez/mosquitto-go-auth](https://hub.docker.com/r/iegomez/mosquitto-go-auth).
+Prebuilt images are provided on GitHub under [lhns/mosquitto-go-auth](https://github.com/lhns/mosquitto-go-auth/pkgs/container/mosquitto-go-auth).
 To run the latest image, use the following command and replace `/conf` with the location of your `.conf` files:
-`docker run -it -p 1884:1884 -p 1883:1883 -v /conf:/etc/mosquitto iegomez/mosquitto-go-auth`
+`docker run -it -p 1884:1884 -p 1883:1883 -v /conf:/etc/mosquitto ghcr.io/lhns/mosquitto-go-auth:<tag>`
 
 You should also add the neccesary configuration to your .conf and update the path of the shared object:
 ```auth_plugin /mosquitto/go-auth.so```
@@ -1655,7 +1680,7 @@ This allows building containers for x86_64/AMD64, ARMv6, ARMv7 and ARM64 on a si
 
 
 #### Step-by-step guide:
-* clone this repository: `git clone https://github.com/iegomez/mosquitto-go-auth.git`
+* clone this repository: `git clone https://github.com/lhns/mosquitto-go-auth.git`
 * change into the project folder `cd mosquitto-go-auth`
 * build containers for your desired architectures: `docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 .`
 

@@ -4,7 +4,7 @@ ARG MOSQUITTO_VERSION=2.0.22
 # Define libwebsocket version
 ARG LWS_VERSION=4.4.1
 
-# Use debian:stable-slim as a builder for Mosquitto and dependencies.
+# Use debian:bookworm-slim as a builder for Mosquitto and dependencies.
 FROM debian:bookworm-slim AS mosquitto_builder
 ARG MOSQUITTO_VERSION
 ARG LWS_VERSION
@@ -51,8 +51,10 @@ RUN set -ex; \
     make CFLAGS="-Wall -O2 -I/build/lws/include" LDFLAGS="-L/build/lws/lib" WITH_WEBSOCKETS=yes; \
     make install;
 
+FROM tonistiigi/xx:1.9.0 AS xx
+
 # Use golang:latest as a builder for the Mosquitto Go Auth plugin.
-FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS go_auth_builder
+FROM golang:1.26-bookworm AS go_auth_builder
 
 ENV CGO_CFLAGS="-I/usr/local/include -fPIC"
 ENV CGO_LDFLAGS="-shared -Wl,-unresolved-symbols=ignore-all"
@@ -63,7 +65,7 @@ ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
 # Install TARGETPLATFORM parser to translate its value to GOOS, GOARCH, and GOARM
-COPY --from=tonistiigi/xx:golang / /
+COPY --from=xx / /
 RUN go env
 
 # Install needed libc and gcc for target platform.
@@ -71,13 +73,13 @@ RUN set -ex; \
   if [ ! -z "$TARGETPLATFORM" ]; then \
     case "$TARGETPLATFORM" in \
   "linux/arm64") \
-    apt-get update && apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
+    apt update && apt install -y binutils gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
     ;; \
   "linux/arm/v7") \
-    apt-get update && apt-get install -y gcc-arm-linux-gnueabihf libc6-dev-armhf-cross \
+    apt update && apt install -y binutils gcc-arm-linux-gnueabihf libc6-dev-armhf-cross \
     ;; \
   "linux/arm/v6") \
-    apt-get update && apt-get install -y gcc-arm-linux-gnueabihf libc6-dev-armel-cross libc6-dev-armhf-cross \
+    apt update && apt install -y binutils gcc-arm-linux-gnueabihf libc6-dev-armel-cross libc6-dev-armhf-cross \
     ;; \
   esac \
   fi
@@ -91,12 +93,12 @@ RUN set -ex; \
     go build -buildmode=c-shared -o go-auth.so; \
 	  go build pw-gen/pw.go
 
-#Start from a new image.
+# Start from a new image.
 FROM debian:bookworm-slim
 
 RUN set -ex; \
-    apt-get update; \
-    apt-get install -y libc-ares2 openssl uuid tini wget libssl-dev libcjson-dev ca-certificates
+    apt update; \
+    apt install -y libc-ares2 openssl uuid tini wget libssl-dev libcjson-dev
 
 RUN mkdir -p /var/lib/mosquitto /var/log/mosquitto
 RUN set -ex; \
@@ -105,7 +107,7 @@ RUN set -ex; \
     chown -R mosquitto:mosquitto /var/log/mosquitto/; \
     chown -R mosquitto:mosquitto /var/lib/mosquitto/
 
-#Copy confs, plugin so and mosquitto binary.
+# Copy confs, plugin so and mosquitto binary.
 COPY --from=mosquitto_builder /app/mosquitto/ /mosquitto/
 COPY --from=go_auth_builder /app/pw /mosquitto/pw
 COPY --from=go_auth_builder /app/go-auth.so /mosquitto/go-auth.so
